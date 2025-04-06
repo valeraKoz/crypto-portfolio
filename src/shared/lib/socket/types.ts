@@ -1,6 +1,7 @@
 export type WebSocketStreamOptions = {
     wsUrl?: string;
-    timeToRecconectMS?: number
+    timeToRecconectMS?: number;
+    useMessage?: (data: SymbolTickerStreamData) => void;
 }
 export type WebSocketPayload = {
     method: "SUBSCRIBE" | "UNSUBSCRIBE";

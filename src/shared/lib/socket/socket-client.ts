@@ -7,6 +7,7 @@ export class WebSocketStream{
     timeToReconnectMS: number;
     reconnectTimeout?: ReturnType<typeof setTimeout>;
     aC?: SymbolTickerStreamData;
+    useMessage?: (data: SymbolTickerStreamData) => void
 
 
     constructor(options?: WebSocketStreamOptions) {
@@ -14,34 +15,30 @@ export class WebSocketStream{
         this.timeToReconnectMS = options && options.timeToRecconectMS ? options.timeToRecconectMS : 3000;
         this.isSubscribed = false
         this.reconnectTimeout = undefined;
+        this.useMessage = options?.useMessage;
     }
 
-    // для 1 или массива разный URL
     private prepareUrl(stream: string | string[]){
         return `${this.wsUrl}/stream?streams=${stream}`
     }
-
-    // проверка запущенного клиента WebSocket
     private isConnected(){
-        // если нет клиента или состояние не OPEN вернет false или true
-        console.log('wsConnected',this.wsConnected)
-        console.log(!(!this.wsConnected || this.wsConnected.readyState !== WebSocket.OPEN))
         return !(!this.wsConnected || this.wsConnected.readyState !== WebSocket.OPEN);
     }
 
-    // запуск клиента WebSocket
     initConnection(url: string){
-        console.log('InitConnection')
         const ws = new WebSocket(url);
         this.wsConnected = ws;
 
         ws.onopen = ()=> {
             console.log('Соединение установлено');
         };
-
         ws.onmessage = (event)=> {
             const eventData: SymbolTickerStreamData = JSON.parse(event.data);
             this.aC = eventData;
+            if(this.useMessage){
+                this.useMessage(eventData);
+                console.log(eventData);
+            }
         };
 
         ws.onclose = (event)=> {
@@ -59,7 +56,6 @@ export class WebSocketStream{
         }
     }
 
-    // Отправка данных на сервер соединения
     send(payload: WebSocketPayload){
         if(!this.isConnected()) console.log('Веб сокет клиент не запущен!')
         else{
@@ -84,15 +80,13 @@ export class WebSocketStream{
                 id: Date.now(),
             };
             this.send(payload);
-            this.isSubscribed = true;
         }
     }
 
     // Отписка от соединения заданных параметров
     unsubscribe(stream: string | string[]){
-        console.log('unsubscribe()');
         if(!this.isConnected()){
-            console.log('No Connection');
+            console.log('Нет соединения!');
         } else {
             if(!Array.isArray(stream)){
                 stream = [stream]
@@ -103,7 +97,6 @@ export class WebSocketStream{
                 id: Date.now()
             };
             this.send(payload);
-            this.isSubscribed = false
         }
     }
 }

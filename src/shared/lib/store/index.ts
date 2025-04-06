@@ -1,5 +1,6 @@
 export {
-    store
+    store,
+    persistor
 } from './store';
 export {
     type RootState,

@@ -1,6 +1,7 @@
 import {createSlice} from "@reduxjs/toolkit";
 import {PortfolioListState} from "@widgets/portfolio-list/lib/store/types";
 import {StockToken} from "@entities/stock-token/model";
+import {SymbolTickerStreamData} from "@shared/lib/socket";
 
 const initialState: PortfolioListState = {
     assets: {},
@@ -39,7 +40,21 @@ export const portfolioListSlice = createSlice({
             delete state.assets[payload]
         },
 
-        updateAssetsPrice: ()=>{}
+        updateAssetsPrice: (state, {payload}:{payload:SymbolTickerStreamData})=>{
+            const assetsName = payload.data.s.slice(0,-4);
+            const thisAsset = state.assets[assetsName];
+            if(thisAsset){
+                state.totalPrice = state.totalPrice - thisAsset.totalPrice!;
+                thisAsset.lastPrice = +payload.data.c;
+                thisAsset.priceChangePercentage = +payload.data.P;
+                thisAsset.totalPrice = thisAsset.quantity * thisAsset.lastPrice;
+                state.totalPrice += thisAsset.totalPrice!;
+
+            }
+            Object.values(state.assets).forEach(asset=>{
+                asset.percentageOfPortfolio = (asset.totalPrice! / state.totalPrice) * 100
+            })
+        }
 
     },
 

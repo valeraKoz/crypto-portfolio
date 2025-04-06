@@ -17,7 +17,6 @@ export const AddTokenForm = () => {
     const {formDataState,setQuantity,addAsset,resetFormDataState} =useFormDataState()
 
     const handleFormSubmit = () =>{
-        console.log('FormState', formDataState)
         if(formDataState.token && formDataState.quantity) {
             addAsset({...formDataState.token,quantity: formDataState.quantity});
             handleFormReset();

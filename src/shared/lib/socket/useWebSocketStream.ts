@@ -1,18 +1,26 @@
 import {WebSocketStream} from "@shared/lib/socket/socket-client";
 import {useEffect, useMemo, useState} from "react";
-import {AssetsType} from "@widgets/portfolio-list/lib/store";
+import {useStoreActions} from "@shared/lib/store/hooks";
 
 export const useWebSocketStream = () =>{
-    const [stream, setStream] = useState<AssetsType>({});
-    const format = 'usdt@ticker';
+    const [stream, setStream] = useState<string[]>([]);
+    const {updateAssetsPrice} = useStoreActions();
+    const [socket, setSocket] = useState<WebSocketStream>();
 
     useEffect(() => {
-        const socket = new WebSocketStream();
-        const tickersMap = Object.values(stream).map(tickerName => tickerName.symbol+format);
-        if(Object.values(stream).length > 0) {
-            console.log(stream);
-            socket.subscribe(tickersMap)
-        };
+        // создаем соединение при монтировании, и закрываем его при размонтировании
+        const socket = new WebSocketStream({
+            useMessage: (data) => updateAssetsPrice(data),
+        });
+        setSocket(socket);
+        return () => socket.closeConnection()
+    }, []);
+
+    useEffect(() => {
+        // при изменении asset-ов, подписываемся на событие
+        const tickers = stream.map(s => s.toLowerCase()+'usdt@ticker');
+        if(stream.length > 0 && socket) socket.subscribe(tickers);
+
     }, [stream]);
 
     return {
