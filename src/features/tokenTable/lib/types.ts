@@ -1,0 +1,10 @@
+export type FilterValue =
+    | 'nameUp'
+    | 'nameDown'
+    | 'percentUp'
+    | 'percentDown'
+    | 'priceUp'
+    | 'priceDown'
+    | 'balanceUp'
+    | 'balanceDown'
+    | 'default'
